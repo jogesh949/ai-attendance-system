@@ -1,0 +1,31 @@
+.student-dashboard {
+  display: flex;
+}
+
+.sidebar {
+  width: 200px;
+  background: #111827;
+  color: white;
+  padding: 20px;
+}
+
+.main {
+  flex: 1;
+  padding: 20px;
+}
+
+.cards {
+  display: flex;
+  gap: 15px;
+}
+
+.card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.row {
+  padding: 8px;
+  border-bottom: 1px solid #ccc;
+}
