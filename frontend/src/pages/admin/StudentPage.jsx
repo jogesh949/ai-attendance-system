@@ -1,184 +1,150 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-
-const API = "http://127.0.0.1:8000";
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import api from '../../api/api';
+import GlassCard from '../../components/GlassCard';
+import DataTable from '../../components/DataTable';
+import DrawerPanel from '../../components/DrawerPanel';
+import { Users, Plus, Search } from 'lucide-react';
 
 export default function StudentPage() {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    roll_no: "",
-    registration_no: "",
-    department_id: "",
-    class_id: "",
-    section: "",
-    batch: "",
-    phone: "",
-    parent_phone: "",
-  });
-
+  const [students, setStudents] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [classes, setClasses] = useState([]);
-  const [students, setStudents] = useState([]);
-  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const token = localStorage.getItem("token");
+  const [form, setForm] = useState({
+    name: '', email: '', roll_no: '', registration_no: '',
+    department_id: '', class_id: '', section: '', batch: '',
+    phone: '', parent_phone: '',
+  });
 
-  useEffect(() => {
-    fetchDepartments();
-    fetchClasses();
-    fetchStudents();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
-  const fetchDepartments = async () => {
-    const res = await axios.get(`${API}/admin/departments`);
-    setDepartments(res.data || []);
-  };
-
-  const fetchClasses = async () => {
-    const res = await axios.get(`${API}/admin/classes`);
-    setClasses(res.data || []);
-  };
-
-  const fetchStudents = async () => {
+  const fetchData = async () => {
     try {
-      const res = await axios.get(`${API}/admin/students`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setStudents(res.data || []);
-    } catch {
-      console.log("Failed to load students");
-    }
+      setLoading(true);
+      const [s, d, c] = await Promise.all([
+        api.get('/admin/students'),
+        api.get('/admin/departments'),
+        api.get('/admin/classes'),
+      ]);
+      setStudents(s.data || []);
+      setDepartments(d.data || []);
+      setClasses(c.data || []);
+    } catch { /* silent */ }
+    finally { setLoading(false); }
   };
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const addStudent = async () => {
     if (!form.name || !form.email || !form.roll_no || !form.class_id) {
-      alert("Name, Email, Roll No and Class are required");
+      toast.error('Name, Email, Roll No and Class are required');
       return;
     }
-
+    setSubmitting(true);
     try {
-      await axios.post(
-        `${API}/admin/students`,
-        {
-          ...form,
-          class_id: Number(form.class_id),
-          department_id: Number(form.department_id),
-          password: "123456",
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      alert("Student added successfully. Default password: 123456");
-
-      setForm({
-        name: "",
-        email: "",
-        roll_no: "",
-        registration_no: "",
-        department_id: "",
-        class_id: "",
-        section: "",
-        batch: "",
-        phone: "",
-        parent_phone: "",
+      await api.post('/admin/students', {
+        name: form.name,
+        email: form.email,
+        password: '123456',
+        roll_no: form.roll_no,
+        class_id: Number(form.class_id),
       });
-
-      fetchStudents();
+      toast.success(`🎉 ${form.name} enrolled as a Student!`);
+      setForm({ name: '', email: '', roll_no: '', registration_no: '', department_id: '', class_id: '', section: '', batch: '', phone: '', parent_phone: '' });
+      setDrawerOpen(false);
+      fetchData();
     } catch (err) {
-      alert(err.response?.data?.detail || "Error adding student");
-    }
+      toast.error(err.response?.data?.detail || 'Error adding student');
+    } finally { setSubmitting(false); }
   };
 
-  const filteredStudents = students.filter((s) =>
-    `${s.name || ""} ${s.email || ""} ${s.roll_no || ""}`
-      .toLowerCase()
-      .includes(search.toLowerCase())
+  const filtered = students.filter(s =>
+    `${s.user_id || ''} ${s.roll_no || ''} ${s.class_id || ''}`.toLowerCase().includes(search.toLowerCase())
   );
 
+  const columns = [
+    { key: 'id', label: '#' },
+    { key: 'user_id', label: 'User ID' },
+    { key: 'roll_no', label: 'Roll No' },
+    { key: 'class_id', label: 'Class ID' },
+  ];
+
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Student Management</h2>
-
-      <div style={{ background: "white", padding: 20, borderRadius: 12 }}>
-        <h3>Add New Student</h3>
-
-        <input name="name" placeholder="Student Name *" value={form.name} onChange={handleChange} />
-        <br /><br />
-
-        <input name="email" placeholder="Email *" value={form.email} onChange={handleChange} />
-        <br /><br />
-
-        <input name="roll_no" placeholder="Roll No *" value={form.roll_no} onChange={handleChange} />
-        <br /><br />
-
-        <input name="registration_no" placeholder="Registration No" value={form.registration_no} onChange={handleChange} />
-        <br /><br />
-
-        <select name="department_id" value={form.department_id} onChange={handleChange}>
-          <option value="">Select Department</option>
-          {departments.map((d) => (
-            <option key={d.id} value={d.id}>{d.name}</option>
-          ))}
-        </select>
-        <br /><br />
-
-        <select name="class_id" value={form.class_id} onChange={handleChange}>
-          <option value="">Select Class *</option>
-          {classes.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-        <br /><br />
-
-        <input name="section" placeholder="Section e.g. A" value={form.section} onChange={handleChange} />
-        <br /><br />
-
-        <input name="batch" placeholder="Batch e.g. 2024-2026" value={form.batch} onChange={handleChange} />
-        <br /><br />
-
-        <input name="phone" placeholder="Student Phone" value={form.phone} onChange={handleChange} />
-        <br /><br />
-
-        <input name="parent_phone" placeholder="Parent Phone" value={form.parent_phone} onChange={handleChange} />
-        <br /><br />
-
-        <p>Default Password: <b>123456</b></p>
-
-        <button onClick={addStudent}>Add Student</button>
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Users size={24} color="var(--accent-cyan)" />
+          <h1 className="font-orbitron" style={{ fontSize: '1.3rem' }}>Students</h1>
+        </div>
+        <button className="btn-primary" onClick={() => setDrawerOpen(true)}>
+          <Plus size={16} /> Add Student
+        </button>
       </div>
 
-      <br />
-
-      <div style={{ background: "white", padding: 20, borderRadius: 12 }}>
-        <h3>Student List</h3>
-
-        <input
-          placeholder="Search by name, email, roll no"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-
-        <br /><br />
-
-        {filteredStudents.length === 0 ? (
-          <p>No students found</p>
-        ) : (
-          filteredStudents.map((s, i) => (
-            <div key={i} style={{ padding: 10, borderBottom: "1px solid #ddd" }}>
-              <b>{s.name}</b> | {s.roll_no} | {s.email}
-              <br />
-              Face Status: {s.face_enrolled ? "Uploaded ✅" : "Not Uploaded ❌"}
-            </div>
-          ))
-        )}
+      {/* Search */}
+      <div style={{ position: 'relative', marginBottom: 16, maxWidth: 400 }}>
+        <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+        <input className="input-field" placeholder="Search students..." value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 40 }} />
       </div>
+
+      <GlassCard>
+        <DataTable columns={columns} data={filtered} isLoading={loading} emptyMessage="No students found." />
+      </GlassCard>
+
+      <DrawerPanel isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} title="Add New Student">
+        {[
+          { name: 'name', label: 'Student Name *', ph: 'Full name' },
+          { name: 'email', label: 'Email *', ph: 'student@email.com' },
+          { name: 'roll_no', label: 'Roll No *', ph: 'e.g. 101' },
+          { name: 'registration_no', label: 'Registration No', ph: 'Optional' },
+        ].map(f => (
+          <div className="form-group" key={f.name}>
+            <label className="form-label">{f.label}</label>
+            <input className="input-field" name={f.name} placeholder={f.ph} value={form[f.name]} onChange={handleChange} />
+          </div>
+        ))}
+
+        <div className="form-group">
+          <label className="form-label">Department</label>
+          <select className="input-field" name="department_id" value={form.department_id} onChange={handleChange}>
+            <option value="">Select Department</option>
+            {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Class *</label>
+          <select className="input-field" name="class_id" value={form.class_id} onChange={handleChange}>
+            <option value="">Select Class</option>
+            {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+
+        {[
+          { name: 'section', label: 'Section', ph: 'e.g. A' },
+          { name: 'batch', label: 'Batch', ph: 'e.g. 2024-2026' },
+          { name: 'phone', label: 'Student Phone', ph: 'Optional' },
+          { name: 'parent_phone', label: 'Parent Phone', ph: 'Optional' },
+        ].map(f => (
+          <div className="form-group" key={f.name}>
+            <label className="form-label">{f.label}</label>
+            <input className="input-field" name={f.name} placeholder={f.ph} value={form[f.name]} onChange={handleChange} />
+          </div>
+        ))}
+
+        <div style={{ padding: '10px 14px', background: 'rgba(0,245,255,0.05)', borderRadius: 8, border: '1px solid var(--glass-border)', marginBottom: 16, fontSize: '0.8rem' }}>
+          🔑 Default Password: <strong style={{ color: 'var(--accent-cyan)' }}>123456</strong>
+        </div>
+
+        <button className="btn-primary" onClick={addStudent} disabled={submitting} style={{ width: '100%' }}>
+          {submitting ? 'Adding...' : 'Add Student'}
+        </button>
+      </DrawerPanel>
     </div>
   );
 }

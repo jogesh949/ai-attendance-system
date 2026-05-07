@@ -1,76 +1,78 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-
-const API = "http://127.0.0.1:8000";
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import api from '../../api/api';
+import GlassCard from '../../components/GlassCard';
+import DataTable from '../../components/DataTable';
+import DrawerPanel from '../../components/DrawerPanel';
+import { DoorOpen, Plus } from 'lucide-react';
 
 export default function ClassroomPage() {
-  const [roomName, setRoomName] = useState("");
-  const [location, setLocation] = useState("");
   const [classrooms, setClassrooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [roomName, setRoomName] = useState('');
+  const [location, setLocation] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchClassrooms();
-  }, []);
+  useEffect(() => { fetchClassrooms(); }, []);
 
   const fetchClassrooms = async () => {
     try {
-      const res = await axios.get(`${API}/admin/classrooms`);
-      setClassrooms(res.data);
-    } catch {
-      alert("Failed to load classrooms");
-    }
+      setLoading(true);
+      const res = await api.get('/admin/classrooms');
+      setClassrooms(res.data || []);
+    } catch { /* silent */ }
+    finally { setLoading(false); }
   };
 
   const addClassroom = async () => {
-    if (!roomName || !location) {
-      alert("Fill all fields");
-      return;
-    }
-
+    if (!roomName.trim() || !location.trim()) { toast.error('Fill all fields'); return; }
+    setSubmitting(true);
     try {
-      const res = await axios.post(`${API}/admin/classrooms`, {
-        room_name: roomName,
-        location: location,
-      });
-
-      setClassrooms([...classrooms, res.data]);
-      setRoomName("");
-      setLocation("");
-      alert("Classroom added");
-    } catch {
-      alert("Error adding classroom");
-    }
+      await api.post('/admin/classrooms', { room_name: roomName, location });
+      toast.success('🎉 Classroom added successfully!');
+      setRoomName(''); setLocation(''); setDrawerOpen(false);
+      fetchClassrooms();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Error adding classroom');
+    } finally { setSubmitting(false); }
   };
 
+  const columns = [
+    { key: 'id', label: '#' },
+    { key: 'room_name', label: 'Room Name' },
+    { key: 'location', label: 'Location' },
+  ];
+
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Add Classroom</h2>
-
-      <input
-        placeholder="Room Name (e.g. Room 101)"
-        value={roomName}
-        onChange={(e) => setRoomName(e.target.value)}
-      />
-
-      <br /><br />
-
-      <input
-        placeholder="Location (e.g. MCA Block)"
-        value={location}
-        onChange={(e) => setLocation(e.target.value)}
-      />
-
-      <br /><br />
-
-      <button onClick={addClassroom}>Add Classroom</button>
-
-      <h3>Classroom List</h3>
-
-      {classrooms.map((c, i) => (
-        <div key={i}>
-          {c.room_name} - {c.location}
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <DoorOpen size={24} color="var(--accent-cyan)" />
+          <h1 className="font-orbitron" style={{ fontSize: '1.3rem' }}>Classrooms</h1>
         </div>
-      ))}
+        <button className="btn-primary" onClick={() => setDrawerOpen(true)}>
+          <Plus size={16} /> Add New
+        </button>
+      </div>
+
+      <GlassCard>
+        <DataTable columns={columns} data={classrooms} isLoading={loading} emptyMessage="No classrooms yet." />
+      </GlassCard>
+
+      <DrawerPanel isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} title="Add Classroom">
+        <div className="form-group">
+          <label className="form-label">Room Name</label>
+          <input className="input-field" placeholder="e.g. Room 101" value={roomName} onChange={e => setRoomName(e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Location</label>
+          <input className="input-field" placeholder="e.g. MCA Block" value={location} onChange={e => setLocation(e.target.value)} />
+        </div>
+        <button className="btn-primary" onClick={addClassroom} disabled={submitting} style={{ width: '100%', marginTop: 16 }}>
+          {submitting ? 'Adding...' : 'Add Classroom'}
+        </button>
+      </DrawerPanel>
     </div>
   );
 }

@@ -1,81 +1,86 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-
-const API = "http://127.0.0.1:8000";
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import api from '../../api/api';
+import GlassCard from '../../components/GlassCard';
+import DataTable from '../../components/DataTable';
+import DrawerPanel from '../../components/DrawerPanel';
+import { BookOpen, Plus } from 'lucide-react';
 
 export default function SubjectPage() {
-  const [name, setName] = useState("");
-  const [departmentId, setDepartmentId] = useState("");
-  const [departments, setDepartments] = useState([]);
   const [subjects, setSubjects] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [departmentId, setDepartmentId] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchDepartments();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
-  const fetchDepartments = async () => {
+  const fetchData = async () => {
     try {
-      const res = await axios.get(`${API}/admin/departments`);
-      setDepartments(res.data);
-    } catch {
-      alert("Failed to load departments");
-    }
+      setLoading(true);
+      const [s, d] = await Promise.all([
+        api.get('/admin/subjects'),
+        api.get('/admin/departments'),
+      ]);
+      setSubjects(s.data || []);
+      setDepartments(d.data || []);
+    } catch { /* silent */ }
+    finally { setLoading(false); }
   };
 
   const addSubject = async () => {
-    if (!name || !departmentId) {
-      alert("Fill all fields");
-      return;
-    }
-
+    if (!name.trim() || !departmentId) { toast.error('Fill all fields'); return; }
+    setSubmitting(true);
     try {
-      const res = await axios.post(`${API}/admin/subjects`, {
-        name,
-        department_id: Number(departmentId),
-      });
-
-      setSubjects([...subjects, res.data]);
-      setName("");
-      setDepartmentId("");
-      alert("Subject added");
-    } catch {
-      alert("Error adding subject");
-    }
+      await api.post('/admin/subjects', { name, department_id: Number(departmentId) });
+      toast.success('🎉 Subject added successfully!');
+      setName(''); setDepartmentId(''); setDrawerOpen(false);
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Error adding subject');
+    } finally { setSubmitting(false); }
   };
 
+  const columns = [
+    { key: 'id', label: '#' },
+    { key: 'name', label: 'Subject Name' },
+    { key: 'department_id', label: 'Dept ID' },
+  ];
+
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Add Subject</h2>
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <BookOpen size={24} color="var(--accent-cyan)" />
+          <h1 className="font-orbitron" style={{ fontSize: '1.3rem' }}>Subjects</h1>
+        </div>
+        <button className="btn-primary" onClick={() => setDrawerOpen(true)}>
+          <Plus size={16} /> Add New
+        </button>
+      </div>
 
-      <input
-        placeholder="Subject name (e.g. AI, DBMS)"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
+      <GlassCard>
+        <DataTable columns={columns} data={subjects} isLoading={loading} emptyMessage="No subjects yet." />
+      </GlassCard>
 
-      <br /><br />
-
-      <select
-        value={departmentId}
-        onChange={(e) => setDepartmentId(e.target.value)}
-      >
-        <option value="">Select Department</option>
-        {departments.map((d) => (
-          <option key={d.id} value={d.id}>
-            {d.name}
-          </option>
-        ))}
-      </select>
-
-      <br /><br />
-
-      <button onClick={addSubject}>Add Subject</button>
-
-      <h3>Subject List</h3>
-
-      {subjects.map((s, i) => (
-        <div key={i}>{s.name}</div>
-      ))}
+      <DrawerPanel isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} title="Add Subject">
+        <div className="form-group">
+          <label className="form-label">Subject Name</label>
+          <input className="input-field" placeholder="e.g. Artificial Intelligence" value={name} onChange={e => setName(e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Department</label>
+          <select className="input-field" value={departmentId} onChange={e => setDepartmentId(e.target.value)}>
+            <option value="">Select Department</option>
+            {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+          </select>
+        </div>
+        <button className="btn-primary" onClick={addSubject} disabled={submitting} style={{ width: '100%', marginTop: 16 }}>
+          {submitting ? 'Adding...' : 'Add Subject'}
+        </button>
+      </DrawerPanel>
     </div>
   );
 }

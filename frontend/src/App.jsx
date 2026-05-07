@@ -5,7 +5,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentFaceUpload from "./pages/StudentFaceUpload";
 
-/* ✅ Generic Protected Route */
+/* ✅ Generic Protected Route — reads localStorage "token" and "role" */
 function ProtectedRoute({ children, roleRequired }) {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
