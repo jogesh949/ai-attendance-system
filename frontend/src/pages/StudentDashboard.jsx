@@ -21,7 +21,6 @@ export default function StudentDashboard() {
   const [overall, setOverall] = useState(0);
   const [totalClasses, setTotalClasses] = useState(0);
   const [totalPresent, setTotalPresent] = useState(0);
-  const [totalLate, setTotalLate] = useState(0);
   const [loading, setLoading] = useState(false);
   const [streak, setStreak] = useState(5); // Mock streak
   const [faceRegistered, setFaceRegistered] = useState(false);
@@ -76,20 +75,19 @@ export default function StudentDashboard() {
   };
 
   // Aggregate attendance by subject
-  const getSubjectStats = () => {
+    const getSubjectStats = () => {
     const stats = {};
     attendance.forEach(r => {
       if (!stats[r.subject]) {
-        stats[r.subject] = { total: 0, present: 0, late: 0, name: r.subject };
+        stats[r.subject] = { total: 0, present: 0, name: r.subject };
       }
       stats[r.subject].total += 1;
       if (r.status === 'Present') stats[r.subject].present += 1;
-      if (r.status === 'Late') stats[r.subject].late += 1;
     });
 
     return Object.values(stats).map(s => ({
       ...s,
-      percentage: Math.round(((s.present + s.late * 0.5) / s.total) * 100)
+      percentage: Math.round((s.present / s.total) * 100)
     }));
   };
 
@@ -232,7 +230,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Real College Summary Bar */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
                    <GlassCard style={{ padding: 20 }}>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 8 }}>CLASSES HELD</div>
                       <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{totalClasses}</div>
@@ -242,12 +240,8 @@ export default function StudentDashboard() {
                       <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#10B981' }}>{totalPresent}</div>
                    </GlassCard>
                    <GlassCard style={{ padding: 20 }}>
-                      <div style={{ fontSize: '0.75rem', color: '#F59E0B', marginBottom: 8 }}>TOTAL LATE</div>
-                      <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#F59E0B' }}>{totalLate}</div>
-                   </GlassCard>
-                   <GlassCard style={{ padding: 20 }}>
                       <div style={{ fontSize: '0.75rem', color: '#EF4444', marginBottom: 8 }}>TOTAL ABSENT</div>
-                      <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#EF4444' }}>{totalClasses - (totalPresent + totalLate)}</div>
+                      <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#EF4444' }}>{totalClasses - totalPresent}</div>
                    </GlassCard>
                 </div>
 
@@ -259,7 +253,7 @@ export default function StudentDashboard() {
                          <div style={{ marginTop: 24, padding: 16, background: 'rgba(255,255,255,0.02)', borderRadius: 12 }}>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>Required for 75%</div>
                             <div style={{ fontSize: '1.2rem', fontWeight: 700, color: overall >= 75 ? '#10B981' : '#EF4444' }}>
-                               {overall >= 75 ? "Safe Margin ✅" : `${Math.ceil((0.75 * totalClasses - (totalPresent + totalLate * 0.5)) / 0.25)} more classes`}
+                               {overall >= 75 ? "Safe Margin ✅" : `${Math.ceil((0.75 * totalClasses - totalPresent) / 0.25)} more classes`}
                             </div>
                          </div>
                       </GlassCard>

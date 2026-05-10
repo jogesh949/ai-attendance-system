@@ -7,5 +7,5 @@ class AttendanceRecord(Base):
     id = Column(Integer, primary_key=True, index=True)
     student_id = Column(Integer, ForeignKey("students.id"))
     session_id = Column(Integer, ForeignKey("attendance_sessions.id"))
-    status = Column(Enum("Present", "Absent", "Late"))
+    status = Column(Enum("Present", "Absent"))
     percentage = Column(Float)

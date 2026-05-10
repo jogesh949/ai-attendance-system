@@ -156,11 +156,11 @@ export default function TeacherDashboard() {
         setDetectionCounts(prev => {
             const newCount = (prev[rand.id] || 0) + 1;
             // Optionally sync with backend manually for simulation persistence
-            if (newCount === 1 || newCount === 3) {
+            if (newCount === 3) { // Use 3 as threshold for Present
                  api.post('/attendance/manual-update', {
                     session_id: sid || sessionId,
                     student_id: rand.id,
-                    status: newCount >= 3 ? 'Present' : 'Late'
+                    status: 'Present'
                  }).catch(() => {});
             }
             return { ...prev, [rand.id]: newCount };
@@ -271,15 +271,13 @@ export default function TeacherDashboard() {
 
   const getStudentStatus = (id) => {
     const count = detectionCounts[id] || 0;
-    if (count >= 3) return 'present';
-    if (count >= 1) return 'late';
-    return 'absent';
+    // Follow 75% rule logic in frontend for consistency
+    return count >= 3 ? 'present' : 'absent';
   };
 
   const presentCount = students.filter(s => getStudentStatus(s.id) === 'present').length;
-  const lateCount = students.filter(s => getStudentStatus(s.id) === 'late').length;
   const absentCount = students.filter(s => getStudentStatus(s.id) === 'absent').length;
-  const attendanceRate = students.length > 0 ? ((presentCount + lateCount) / students.length * 100) : 0;
+  const attendanceRate = students.length > 0 ? (presentCount / students.length * 100) : 0;
 
   return (
     <div className="layout-shell">
@@ -335,7 +333,6 @@ export default function TeacherDashboard() {
                       <div style={{ display: 'grid', gap: 8 }}>
                         <div>✅ Present: {report.filter(r => r.status === 'Present').length}</div>
                         <div>❌ Absent: {report.filter(r => r.status === 'Absent').length}</div>
-                        <div>⏰ Late: {report.filter(r => r.status === 'Late').length}</div>
                       </div>
                       <button className="btn-primary" onClick={downloadCSV} style={{ marginTop: 20, width: '100%' }}><FileDown size={14} /> Download CSV</button>
                     </GlassCard>
@@ -351,7 +348,6 @@ export default function TeacherDashboard() {
                             <select className="input-field" value={r.status} onChange={e => manualCorrection(r.student_id, e.target.value)} style={{ width: 120, padding: '6px 10px', fontSize: '0.8rem' }}>
                               <option value="Present">Present</option>
                               <option value="Absent">Absent</option>
-                              <option value="Late">Late</option>
                             </select>
                           </div>
                         ))}
@@ -444,7 +440,6 @@ export default function TeacherDashboard() {
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 16 }}>
                         {[
                           { label: '✅ Present', val: presentCount, c: '#10B981' },
-                          { label: '⏰ Late', val: lateCount, c: '#F59E0B' },
                           { label: '❌ Absent', val: absentCount, c: '#F43F5E' },
                           { label: '👥 Total', val: students.length, c: '#00F5FF' },
                         ].map((s, i) => (

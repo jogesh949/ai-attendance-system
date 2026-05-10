@@ -728,9 +728,8 @@ def get_student_attendance_stats(
 
     total_sessions = len(records)
     present_count = len([r for r in records if r.status == "Present"])
-    late_count = len([r for r in records if r.status == "Late"])
     
-    overall_pct = ((present_count + (late_count * 0.5)) / total_sessions) * 100 if total_sessions > 0 else 0
+    overall_pct = (present_count / total_sessions) * 100 if total_sessions > 0 else 0
 
     subject_stats = {}
     results = db.query(AttendanceRecord, AttendanceSession, Subject).\
@@ -744,25 +743,22 @@ def get_student_attendance_stats(
                 "subject_name": sub.name,
                 "subject_code": sub.subject_code,
                 "total": 0,
-                "present": 0,
-                "late": 0
+                "present": 0
             }
         
         subject_stats[sub.id]["total"] += 1
         if rec.status == "Present":
             subject_stats[sub.id]["present"] += 1
-        elif rec.status == "Late":
-            subject_stats[sub.id]["late"] += 1
 
     subject_list = []
     for s_id, stats in subject_stats.items():
-        pct = ((stats["present"] + (stats["late"] * 0.5)) / stats["total"]) * 100
+        pct = (stats["present"] / stats["total"]) * 100
         subject_list.append({
             "subject_name": stats["subject_name"],
             "subject_code": stats["subject_code"],
             "percentage": round(pct, 2),
             "total_classes": stats["total"],
-            "attended_classes": stats["present"] + stats["late"]
+            "attended_classes": stats["present"]
         })
 
     return {

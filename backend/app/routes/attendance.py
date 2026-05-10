@@ -139,11 +139,10 @@ def finalize_attendance(session_id: int, db: Session = Depends(get_db)):
         count = detection_count.get(student.id, 0)
         is_enrolled = student.id in enrolled_student_ids
 
-        # ✅ Professional College Rule:
+        # ✅ Simplified Rule:
         # 1. If not enrolled (no face photo), always Absent
         # 2. If present for >= 75% of session time, mark Present
-        # 3. If present for < 75% but > 0%, mark Late
-        # 4. If never seen, mark Absent
+        # 3. Otherwise, mark Absent
         
         if not is_enrolled:
             status = "Absent"
@@ -151,9 +150,6 @@ def finalize_attendance(session_id: int, db: Session = Depends(get_db)):
         elif count >= required_detections:
             status = "Present"
             percentage = 100
-        elif count > 0:
-            status = "Late"
-            percentage = 50
         else:
             status = "Absent"
             percentage = 0
@@ -198,15 +194,13 @@ def finalize_attendance(session_id: int, db: Session = Depends(get_db)):
 class ManualUpdate(BaseModel):
     session_id: int
     student_id: int
-    status: str # Present, Absent, Late
+    status: str # Present, Absent
 
 @router.post("/manual-update")
 def manual_update(data: ManualUpdate, db: Session = Depends(get_db)):
     percentage = 0
     if data.status == "Present":
         percentage = 100
-    elif data.status == "Late":
-        percentage = 50
 
     record = db.query(AttendanceRecord).filter(
         AttendanceRecord.session_id == data.session_id,

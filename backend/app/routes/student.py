@@ -83,11 +83,8 @@ def get_student_attendance(
 
     total = len(results)
     present = len([r for r, s, sub_name in results if r.status == "Present"])
-    late = len([r for r, s, sub_name in results if r.status == "Late"])
 
-    # Weighted percentage: Present=100%, Late=50%
-    weighted_present = present + (late * 0.5)
-    percentage = (weighted_present / total * 100) if total > 0 else 0
+    percentage = (present / total * 100) if total > 0 else 0
 
     return {
         "records": [
@@ -103,6 +100,5 @@ def get_student_attendance(
         ],
         "total_classes": total,
         "total_present": present,
-        "total_late": late,
         "percentage": round(percentage, 2)
     }

@@ -1,7 +1,6 @@
 const variants = {
   present: { bg: 'rgba(16, 185, 129, 0.15)', color: '#10B981', border: 'rgba(16, 185, 129, 0.3)', label: '✅ Present' },
   absent:  { bg: 'rgba(239, 68, 68, 0.15)',  color: '#EF4444', border: 'rgba(239, 68, 68, 0.3)',  label: '❌ Absent'  },
-  late:    { bg: 'rgba(245, 158, 11, 0.15)', color: '#F59E0B', border: 'rgba(245, 158, 11, 0.3)', label: '⏰ Late'    },
   live:    { bg: 'rgba(239, 68, 68, 0.15)',  color: '#EF4444', border: 'rgba(239, 68, 68, 0.3)',  label: '🔴 LIVE'    },
   online:  { bg: 'rgba(16, 185, 129, 0.15)', color: '#10B981', border: 'rgba(16, 185, 129, 0.3)', label: '🟢 Online'  },
   offline: { bg: 'rgba(239, 68, 68, 0.15)',  color: '#EF4444', border: 'rgba(239, 68, 68, 0.3)',  label: '🔴 Offline' },
