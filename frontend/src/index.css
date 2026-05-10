@@ -295,12 +295,8 @@ select.input-field option {
     padding: 16px;
   }
 }
-<<<<<<< HEAD
-
 @keyframes scan {
   0% { top: 0; }
   50% { top: 100%; }
   100% { top: 0; }
 }
-=======
->>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c

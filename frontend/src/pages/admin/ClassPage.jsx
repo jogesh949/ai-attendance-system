@@ -4,12 +4,8 @@ import api from '../../api/api';
 import GlassCard from '../../components/GlassCard';
 import DataTable from '../../components/DataTable';
 import DrawerPanel from '../../components/DrawerPanel';
-<<<<<<< HEAD
 import ConfirmModal from '../../components/ConfirmModal';
 import { GraduationCap, Plus, Trash2, Pencil, Search, Filter } from 'lucide-react';
-=======
-import { GraduationCap, Plus } from 'lucide-react';
->>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
 
 export default function ClassPage() {
   const [classes, setClasses] = useState([]);
@@ -20,7 +16,6 @@ export default function ClassPage() {
   const [departmentId, setDepartmentId] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-<<<<<<< HEAD
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDept, setFilterDept] = useState('');
@@ -33,8 +28,6 @@ export default function ClassPage() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-=======
->>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
@@ -50,7 +43,6 @@ export default function ClassPage() {
     finally { setLoading(false); }
   };
 
-<<<<<<< HEAD
   const handleSave = async () => {
     if (!name.trim() || !departmentId) { toast.error('Fill all fields'); return; }
     setSubmitting(true);
@@ -175,25 +167,6 @@ export default function ClassPage() {
         </div>
       )
     }
-=======
-  const addClass = async () => {
-    if (!name.trim() || !departmentId) { toast.error('Fill all fields'); return; }
-    setSubmitting(true);
-    try {
-      await api.post('/admin/classes', { name, department_id: Number(departmentId) });
-      toast.success('🎉 Class added successfully!');
-      setName(''); setDepartmentId(''); setDrawerOpen(false);
-      fetchData();
-    } catch (err) {
-      toast.error(err.response?.data?.detail || 'Error adding class');
-    } finally { setSubmitting(false); }
-  };
-
-  const columns = [
-    { key: 'id', label: '#' },
-    { key: 'name', label: 'Class Name' },
-    { key: 'department_id', label: 'Dept ID' },
->>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
   ];
 
   return (
@@ -203,16 +176,11 @@ export default function ClassPage() {
           <GraduationCap size={24} color="var(--accent-cyan)" />
           <h1 className="font-orbitron" style={{ fontSize: '1.3rem' }}>Classes</h1>
         </div>
-<<<<<<< HEAD
         <button className="btn-primary" onClick={() => { resetForm(); setDrawerOpen(true); }}>
-=======
-        <button className="btn-primary" onClick={() => setDrawerOpen(true)}>
->>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
           <Plus size={16} /> Add New
         </button>
       </div>
 
-<<<<<<< HEAD
       <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
         <div style={{ position: 'relative', flex: 1 }}>
           <Search size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
@@ -243,13 +211,6 @@ export default function ClassPage() {
       </GlassCard>
 
       <DrawerPanel isOpen={drawerOpen} onClose={resetForm} title={editId ? "Edit Class" : "Add Class"}>
-=======
-      <GlassCard>
-        <DataTable columns={columns} data={classes} isLoading={loading} emptyMessage="No classes yet." />
-      </GlassCard>
-
-      <DrawerPanel isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} title="Add Class">
->>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
         <div className="form-group">
           <label className="form-label">Class Name</label>
           <input className="input-field" placeholder="e.g. MCA 1st Year" value={name} onChange={e => setName(e.target.value)} />
@@ -261,7 +222,6 @@ export default function ClassPage() {
             {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
         </div>
-<<<<<<< HEAD
         <button className="btn-primary" onClick={handleSave} disabled={submitting} style={{ width: '100%', marginTop: 16 }}>
           {submitting ? (editId ? 'Updating...' : 'Adding...') : (editId ? 'Update Class' : 'Add Class')}
         </button>
@@ -279,12 +239,6 @@ export default function ClassPage() {
         }}
         icon={<Trash2 color="#ff4757" size={40} />}
       />
-=======
-        <button className="btn-primary" onClick={addClass} disabled={submitting} style={{ width: '100%', marginTop: 16 }}>
-          {submitting ? 'Adding...' : 'Add Class'}
-        </button>
-      </DrawerPanel>
->>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
     </div>
   );
 }

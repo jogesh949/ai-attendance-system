@@ -2,11 +2,7 @@ import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Building2, GraduationCap, BookOpen, DoorOpen,
   Users, UserCheck, Camera, Calendar, BarChart3, Monitor,
-<<<<<<< HEAD
   Video, AlertTriangle, Bell, Upload, Home, Search, User,
-=======
-  Video, AlertTriangle, Bell, Upload, Home,
->>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
   PanelLeftClose, PanelLeft,
 } from 'lucide-react';
 
@@ -28,10 +24,7 @@ const menuConfig = {
   teacher: [
     { key: 'dashboard',      icon: Home,             label: 'Dashboard' },
     { key: 'liveAttendance', icon: Video,            label: 'Live Attendance' },
-<<<<<<< HEAD
     { key: 'studentLookup',  icon: Search,           label: 'Student Lookup' },
-=======
->>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
     { key: 'timetable',      icon: Calendar,         label: 'Timetable' },
     { key: 'reports',        icon: BarChart3,         label: 'Reports' },
     { key: 'lowAttendance',  icon: AlertTriangle,    label: 'Low Attendance' },
@@ -42,10 +35,7 @@ const menuConfig = {
     { key: 'calendar',       icon: Calendar,         label: 'Calendar' },
     { key: 'notifications',  icon: Bell,             label: 'Notifications' },
     { key: 'uploadFace',     icon: Upload,           label: 'Upload Face' },
-<<<<<<< HEAD
     { key: 'profile',        icon: User,             label: 'Profile' },
-=======
->>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
   ],
 };
 
