@@ -5,10 +5,13 @@ from app.database.connection import SessionLocal
 from app.routes.auth import get_current_user
 from app.models.teacher import Teacher
 from app.models.attendance_session import AttendanceSession
+<<<<<<< HEAD
 from app.models.user import User
 from app.models.class_model import Class
 from app.models.subject import Subject
 from app.models.classroom import Classroom, Camera
+=======
+>>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
 
 router = APIRouter(prefix="/teacher", tags=["Teacher"])
 
@@ -28,14 +31,18 @@ class SessionRequest(BaseModel):
     classroom_id: int
 
 
+<<<<<<< HEAD
 from app.models.classroom import Classroom, Camera
 
+=======
+>>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
 @router.post("/start-session")
 def start_session(
     data: SessionRequest,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
+<<<<<<< HEAD
     try:
         if current_user.role != "teacher":
             raise HTTPException(status_code=403, detail="Only teacher allowed")
@@ -78,6 +85,33 @@ def start_session(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+=======
+    if current_user.role != "teacher":
+        raise HTTPException(status_code=403, detail="Only teacher allowed")
+
+    teacher = db.query(Teacher).filter(
+        Teacher.user_id == current_user.id
+    ).first()
+
+    if not teacher:
+        raise HTTPException(status_code=404, detail="Teacher not found")
+
+    session = AttendanceSession(
+        class_id=data.class_id,
+        subject_id=data.subject_id,
+        teacher_id=teacher.id,
+        classroom_id=data.classroom_id   # ✅ NEW
+    )
+
+    db.add(session)
+    db.commit()
+    db.refresh(session)
+
+    return {
+        "message": "Session started",
+        "session_id": session.id
+    }
+>>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
 
 @router.post("/stop-session")
 def stop_session(

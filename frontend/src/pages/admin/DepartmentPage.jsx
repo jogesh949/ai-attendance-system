@@ -4,8 +4,12 @@ import api from '../../api/api';
 import GlassCard from '../../components/GlassCard';
 import DataTable from '../../components/DataTable';
 import DrawerPanel from '../../components/DrawerPanel';
+<<<<<<< HEAD
 import ConfirmModal from '../../components/ConfirmModal';
 import { Building2, Plus, Trash2 } from 'lucide-react';
+=======
+import { Building2, Plus } from 'lucide-react';
+>>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
 
 export default function DepartmentPage() {
   const [departments, setDepartments] = useState([]);
@@ -14,11 +18,14 @@ export default function DepartmentPage() {
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+<<<<<<< HEAD
   // Deletion state
   const [deleteId, setDeleteId] = useState(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+=======
+>>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
   useEffect(() => { fetchDepartments(); }, []);
 
   const fetchDepartments = async () => {
@@ -44,6 +51,7 @@ export default function DepartmentPage() {
     } finally { setSubmitting(false); }
   };
 
+<<<<<<< HEAD
   const handleDelete = async () => {
     if (!deleteId) return;
     setDeleting(true);
@@ -91,6 +99,11 @@ export default function DepartmentPage() {
         </button>
       )
     }
+=======
+  const columns = [
+    { key: 'id', label: '#' },
+    { key: 'name', label: 'Department Name' },
+>>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
   ];
 
   return (
@@ -118,6 +131,7 @@ export default function DepartmentPage() {
           {submitting ? 'Adding...' : 'Add Department'}
         </button>
       </DrawerPanel>
+<<<<<<< HEAD
 
       <ConfirmModal
         isOpen={isConfirmOpen}
@@ -131,6 +145,8 @@ export default function DepartmentPage() {
         }}
         icon={<Trash2 color="#ff4757" size={40} />}
       />
+=======
+>>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
     </div>
   );
 }

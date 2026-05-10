@@ -495,8 +495,7 @@ export default function TeacherDashboard() {
                 <p style={{ color: 'var(--text-muted)' }}>Feature coming soon...</p>
               </div>
             )}
-            </PageTransition>
-
+          </PageTransition>
         </div>
       </main>
 

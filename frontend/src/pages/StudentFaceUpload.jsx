@@ -125,6 +125,7 @@ export default function StudentFaceUpload() {
           ))}
         </div>
 
+<<<<<<< HEAD
         {/* Step 1 — Choose Method */}
         {step === 1 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -155,6 +156,23 @@ export default function StudentFaceUpload() {
               </div>
 
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 24 }}>
+=======
+        {/* Step 1 — Camera Permission */}
+        {step === 1 && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <GlassCard style={{ textAlign: 'center', padding: 48 }}>
+              <Camera size={48} color="var(--accent-cyan)" style={{ marginBottom: 20 }} />
+              <h2 className="font-orbitron" style={{ fontSize: '1.2rem', marginBottom: 12 }}>
+                Set Up Your Face ID
+              </h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: 24, maxWidth: 400, margin: '0 auto 24px' }}>
+                The AI needs to learn your face so it can recognize you automatically during class.
+              </p>
+              <button className="btn-primary" onClick={enableCamera} style={{ padding: '14px 32px' }}>
+                🎥 Enable Camera
+              </button>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 16 }}>
+>>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
                 🔒 Your photos are encrypted and used only for attendance recognition.
               </p>
             </GlassCard>
@@ -185,6 +203,7 @@ export default function StudentFaceUpload() {
                 />
               </div>
 
+<<<<<<< HEAD
               {/* Video or Gallery Placeholder */}
               <div style={{ borderRadius: 12, overflow: 'hidden', marginBottom: 16, position: 'relative', background: '#000', minHeight: cameraActive ? 'auto' : 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {cameraActive ? (
@@ -195,6 +214,11 @@ export default function StudentFaceUpload() {
                     <p style={{ fontSize: '0.9rem' }}>Gallery Upload Mode Active</p>
                   </div>
                 )}
+=======
+              {/* Video */}
+              <div style={{ borderRadius: 12, overflow: 'hidden', marginBottom: 16, position: 'relative' }}>
+                <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', display: 'block', background: '#000', borderRadius: 12 }} />
+>>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
                 <canvas ref={canvasRef} style={{ display: 'none' }} />
               </div>
 
@@ -228,6 +252,7 @@ export default function StudentFaceUpload() {
 
               {/* Buttons */}
               <div style={{ display: 'flex', gap: 12 }}>
+<<<<<<< HEAD
                 {cameraActive && (
                   <button className="btn-primary" onClick={capturePhoto} disabled={uploading || photos.length >= 10} style={{ flex: 2 }}>
                     {uploading ? 'Capturing...' : '📷 Capture Photo'}
@@ -235,6 +260,13 @@ export default function StudentFaceUpload() {
                 )}
                 <button className={cameraActive ? "btn-ghost" : "btn-primary"} onClick={() => fileRef.current?.click()} disabled={photos.length >= 10} style={{ flex: 1 }}>
                   <Upload size={14} /> {cameraActive ? 'Gallery' : 'Select Photos from Gallery'}
+=======
+                <button className="btn-primary" onClick={capturePhoto} disabled={uploading || photos.length >= 10} style={{ flex: 1 }}>
+                  {uploading ? 'Uploading...' : '📷 Capture Photo'}
+                </button>
+                <button className="btn-ghost" onClick={() => fileRef.current?.click()} disabled={photos.length >= 10} style={{ flex: 1 }}>
+                  <Image size={14} /> Upload File
+>>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
                 </button>
                 <input ref={fileRef} type="file" accept="image/*" multiple onChange={handleFileUpload} style={{ display: 'none' }} />
               </div>

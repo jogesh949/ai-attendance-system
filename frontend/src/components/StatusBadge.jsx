@@ -6,7 +6,10 @@ const variants = {
   online:  { bg: 'rgba(16, 185, 129, 0.15)', color: '#10B981', border: 'rgba(16, 185, 129, 0.3)', label: '🟢 Online'  },
   offline: { bg: 'rgba(239, 68, 68, 0.15)',  color: '#EF4444', border: 'rgba(239, 68, 68, 0.3)',  label: '🔴 Offline' },
   degraded:{ bg: 'rgba(245, 158, 11, 0.15)', color: '#F59E0B', border: 'rgba(245, 158, 11, 0.3)', label: '🟡 Degraded'},
+<<<<<<< HEAD
   simulated:{ bg: 'rgba(0, 245, 255, 0.15)', color: 'var(--accent-cyan)', border: 'rgba(0, 245, 255, 0.3)', label: '🛠️ Simulated'},
+=======
+>>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c
 };
 
 export default function StatusBadge({ variant = 'present', text }) {

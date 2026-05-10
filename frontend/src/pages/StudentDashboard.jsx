@@ -193,7 +193,7 @@ export default function StudentDashboard() {
                             <ArrowRight size={14} color="var(--text-muted)" />
                          </GlassCard>
                          
-                         <GlassCard onClick={() => setPage('calendar')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, cursor: 'pointer' }} className="hover-bg">
+                         <GlassCard onClick={() => setPage('attendance')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, cursor: 'pointer' }} className="hover-bg">
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                <div style={{ padding: 10, background: 'rgba(139, 92, 246, 0.1)', borderRadius: 10 }}>
                                   <Calendar size={18} color="var(--accent-violet)" />

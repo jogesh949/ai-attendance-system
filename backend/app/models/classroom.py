@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from sqlalchemy import Column, Integer, String, ForeignKey, TIMESTAMP, Boolean, Text
 from sqlalchemy.orm import relationship
 from app.database.connection import Base
@@ -33,3 +34,15 @@ class Classroom(Base):
     capacity = Column(Integer, default=60)
 
     cameras = relationship("Camera", back_populates="classroom", cascade="all, delete-orphan")
+=======
+from sqlalchemy import Column, Integer, String
+from app.database.connection import Base
+
+
+class Classroom(Base):
+    __tablename__ = "classrooms"
+
+    id = Column(Integer, primary_key=True, index=True)
+    room_name = Column(String(50))
+    location = Column(String(100))
+>>>>>>> ebfa0412648e52de42ee6f8ee11a6a47c077645c

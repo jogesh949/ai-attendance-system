@@ -62,7 +62,7 @@ class TeacherRequest(BaseModel):
     email: str
     password: str = None
     department_ids: List[int]
-    teacher_code: str = None  # Optional, can be generated if not provided
+    teacher_code: str = None 
 
 class StudentRequest(BaseModel):
     name: str
@@ -129,30 +129,15 @@ def delete_department(
         raise HTTPException(status_code=404, detail="Department not found")
 
     try:
-        # 1. Handle the 'teacher_departments' table which might not be in our models
-        # We use raw SQL to delete these entries as they are likely many-to-many links
         db.execute(text("DELETE FROM teacher_departments WHERE department_id = :dept_id"), {"dept_id": department_id})
-        
-        # 2. Disassociate Teachers
         db.query(Teacher).filter(Teacher.department_id == department_id).update({"department_id": None}, synchronize_session='fetch')
-        
-        # 3. Disassociate Classes
         db.query(Class).filter(Class.department_id == department_id).update({"department_id": None}, synchronize_session='fetch')
-        
-        # 4. Handle Subjects - Usually subjects are tied strictly to a department
-        # We'll disassociate them for now, or you could choose to delete them
         db.query(Subject).filter(Subject.department_id == department_id).update({"department_id": None}, synchronize_session='fetch')
-        
-        # Flush the changes to check for constraints
         db.flush()
-
-        # 5. Delete the department itself
         db.delete(dept)
         db.commit()
     except Exception as e:
         db.rollback()
-        # If raw SQL failed because table doesn't exist, we can ignore that specific error and continue
-        # but for now let's report it
         raise HTTPException(status_code=400, detail=f"Error during deletion: {str(e)}")
 
     return {"message": "Department deleted successfully"}
@@ -199,14 +184,9 @@ def delete_class(
         raise HTTPException(status_code=404, detail="Class not found")
 
     try:
-        # Disassociate students
         db.query(Student).filter(Student.class_id == class_id).update({"class_id": None}, synchronize_session='fetch')
-        
-        # We might also need to handle Attendance Sessions tied to this class
-        # For now, let's disassociate them if they exist
         from app.models.attendance_session import AttendanceSession
         db.query(AttendanceSession).filter(AttendanceSession.class_id == class_id).update({"class_id": None}, synchronize_session='fetch')
-        
         db.delete(cls)
         db.commit()
     except Exception as e:
@@ -304,10 +284,8 @@ def delete_subject(
         raise HTTPException(status_code=404, detail="Subject not found")
 
     try:
-        # Disassociate from attendance sessions
         from app.models.attendance_session import AttendanceSession
         db.query(AttendanceSession).filter(AttendanceSession.subject_id == subject_id).update({"subject_id": None}, synchronize_session='fetch')
-        
         db.delete(sub)
         db.commit()
     except Exception as e:
@@ -351,7 +329,6 @@ def get_classrooms(
     
     result = []
     for r in rooms:
-        # Fetch cameras for each room
         cam_list = []
         for cam in r.cameras:
             cam_list.append({
@@ -425,7 +402,6 @@ def add_camera_to_room(
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
         
-    # If this is set as primary, unmark others in this room
     if data.is_primary:
         db.query(Camera).filter(Camera.classroom_id == room_id).update({"is_primary": False})
 
@@ -457,7 +433,6 @@ def update_camera(
     if not cam:
         raise HTTPException(status_code=404, detail="Camera not found")
     
-    # If setting as primary, unset others for this room
     if data.is_primary:
         db.query(Camera).filter(Camera.classroom_id == cam.classroom_id).update({"is_primary": False})
 
@@ -489,51 +464,6 @@ def remove_camera(
     db.commit()
     return {"message": "Camera removed"}
 
-@router.post("/cameras/{camera_id}/test")
-def test_camera(
-    camera_id: int,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
-    check_admin(current_user)
-    cam = db.query(Camera).filter(Camera.id == camera_id).first()
-    if not cam:
-        raise HTTPException(status_code=404, detail="Camera not found")
-
-    source = cam.source_url
-    try:
-        source = int(source)
-    except:
-        pass
-
-    cap = cv2.VideoCapture(source)
-    if not cap.isOpened():
-        cam.current_status = "Error"
-        db.commit()
-        return {"status": "failure", "message": "Could not connect to camera source"}
-
-    ret, frame = cap.read()
-    if not ret:
-        cap.release()
-        cam.current_status = "Error"
-        db.commit()
-        return {"status": "failure", "message": "Connected but failed to capture frame"}
-
-    width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-    height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    cap.release()
-    
-    cam.current_status = "Online"
-    cam.last_active_time = text("CURRENT_TIMESTAMP")
-    db.commit()
-    
-    return {
-        "status": "success",
-        "resolution": f"{int(width)}x{int(height)}",
-        "fps": int(fps) if fps > 0 else cam.fps
-    }
-
 @router.get("/cameras/monitor")
 def monitor_cameras(
     db: Session = Depends(get_db),
@@ -557,7 +487,6 @@ def add_teacher(
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already exists")
 
-    # Create associated user
     new_user = User(
         name=data.name,
         email=data.email,
@@ -568,17 +497,14 @@ def add_teacher(
     db.commit()
     db.refresh(new_user)
 
-    # Generate teacher code if not provided
     teacher_code = data.teacher_code if data.teacher_code else f"TCH{new_user.id}"
     
     existing_teacher = db.query(Teacher).filter(Teacher.teacher_code == teacher_code).first()
     if existing_teacher:
          raise HTTPException(status_code=400, detail="Teacher code already exists")
 
-    # Primary dept is the first one in the list
     primary_dept = data.department_ids[0] if data.department_ids else None
 
-    # Create teacher profile
     new_teacher = Teacher(
         user_id=new_user.id,
         department_id=primary_dept,
@@ -588,7 +514,6 @@ def add_teacher(
     db.commit()
     db.refresh(new_teacher)
 
-    # Add to teacher_departments junction table
     for d_id in data.department_ids:
         db.execute(
             text("INSERT INTO teacher_departments (teacher_id, department_id) VALUES (:t_id, :d_id)"),
@@ -611,13 +536,10 @@ def get_teachers(
     check_admin(current_user)
     teachers = db.query(Teacher).all()
     
-    # Enhance teachers with all their department IDs
     result = []
     for t in teachers:
         dept_ids = []
         try:
-            # Get all department IDs from junction table
-            # We use mappings() to get dict-like access or just handle the row tuple
             rows = db.execute(
                 text("SELECT department_id FROM teacher_departments WHERE teacher_id = :t_id"),
                 {"t_id": t.id}
@@ -625,7 +547,6 @@ def get_teachers(
             dept_ids = [row[0] for row in rows]
         except Exception as e:
             print(f"Error fetching departments for teacher {t.id}: {e}")
-            # Fallback to the primary department_id if junction table fails
             if t.department_id:
                 dept_ids = [t.department_id]
         
@@ -633,7 +554,7 @@ def get_teachers(
             "id": t.id,
             "user_id": t.user_id,
             "teacher_code": t.teacher_code,
-            "department_id": t.department_id, # keep for compatibility
+            "department_id": t.department_id,
             "department_ids": dept_ids,
             "user_name": t.user.name if (hasattr(t, 'user') and t.user) else "Unknown",
             "user_email": t.user.email if (hasattr(t, 'user') and t.user) else "Unknown"
@@ -659,19 +580,16 @@ def update_teacher(
     if not user:
         raise HTTPException(status_code=404, detail="Associated user not found")
 
-    # Update User info
     user.name = data.name
     user.email = data.email
     if data.password:
         user.password = hash_password(data.password)
     
-    # Update Teacher info
     primary_dept = data.department_ids[0] if data.department_ids else None
     teacher.department_id = primary_dept
     if data.teacher_code:
         teacher.teacher_code = data.teacher_code
 
-    # Update junction table
     db.execute(text("DELETE FROM teacher_departments WHERE teacher_id = :t_id"), {"t_id": teacher_id})
     for d_id in data.department_ids:
         db.execute(
@@ -695,21 +613,14 @@ def delete_teacher(
         raise HTTPException(status_code=404, detail="Teacher not found")
 
     try:
-        # Disassociate from attendance sessions
         from app.models.attendance_session import AttendanceSession
         db.query(AttendanceSession).filter(AttendanceSession.teacher_id == teacher_id).update({"teacher_id": None}, synchronize_session='fetch')
-        
-        # Also handle teacher_departments if it exists
         db.execute(text("DELETE FROM teacher_departments WHERE teacher_id = :t_id"), {"t_id": teacher_id})
-        
         user_id = teacher.user_id
         db.delete(teacher)
-        
-        # Delete the associated user as well
         user = db.query(User).filter(User.id == user_id).first()
         if user:
             db.delete(user)
-            
         db.commit()
     except Exception as e:
         db.rollback()
@@ -731,7 +642,6 @@ def add_student(
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already exists")
 
-    # Create associated user
     new_user = User(
         name=data.name,
         email=data.email,
@@ -742,7 +652,6 @@ def add_student(
     db.commit()
     db.refresh(new_user)
 
-    # Create student profile
     new_student = Student(
         user_id=new_user.id,
         class_id=data.class_id,
@@ -772,10 +681,7 @@ def get_students(
         
         result = []
         for s in students:
-            # Check if face is registered
             face = db.query(FaceEmbedding).filter(FaceEmbedding.student_id == s.id).first()
-            
-            # Get class and department info
             cls_name = "N/A"
             dept_name = "N/A"
             try:
@@ -787,7 +693,7 @@ def get_students(
                         if dept:
                             dept_name = dept.name
             except:
-                pass # Silently handle if class/dept fails
+                pass
 
             result.append({
                 "id": s.id,
@@ -824,14 +730,9 @@ def get_student_attendance_stats(
     present_count = len([r for r in records if r.status == "Present"])
     late_count = len([r for r in records if r.status == "Late"])
     
-    # Calculate weighted percentage (Present=100%, Late=50%)
     overall_pct = ((present_count + (late_count * 0.5)) / total_sessions) * 100 if total_sessions > 0 else 0
 
-    # Subject-wise breakdown
-    # Join with sessions and subjects
     subject_stats = {}
-    
-    # Get all records with session info
     results = db.query(AttendanceRecord, AttendanceSession, Subject).\
         join(AttendanceSession, AttendanceRecord.session_id == AttendanceSession.id).\
         join(Subject, AttendanceSession.subject_id == Subject.id).\
@@ -853,7 +754,6 @@ def get_student_attendance_stats(
         elif rec.status == "Late":
             subject_stats[sub.id]["late"] += 1
 
-    # Format the subject stats list
     subject_list = []
     for s_id, stats in subject_stats.items():
         pct = ((stats["present"] + (stats["late"] * 0.5)) / stats["total"]) * 100
@@ -888,13 +788,11 @@ def update_student(
     if not user:
         raise HTTPException(status_code=404, detail="Associated user not found")
 
-    # Update User info
     user.name = data.name
     user.email = data.email
     if data.password:
         user.password = hash_password(data.password)
         
-    # Update Student info
     student.roll_no = data.roll_no
     student.class_id = data.class_id
 
@@ -914,23 +812,16 @@ def delete_student(
         raise HTTPException(status_code=404, detail="Student not found")
 
     try:
-        # Delete face embeddings first
         db.query(FaceEmbedding).filter(FaceEmbedding.student_id == student_id).delete()
-        
-        # Disassociate from attendance records/logs
         from app.models.attendance_record import AttendanceRecord
         from app.models.attendance_logs import AttendanceLog
         db.query(AttendanceRecord).filter(AttendanceRecord.student_id == student_id).delete()
         db.query(AttendanceLog).filter(AttendanceLog.student_id == student_id).delete()
-        
         user_id = student.user_id
         db.delete(student)
-        
-        # Delete user account
         user = db.query(User).filter(User.id == user_id).first()
         if user:
             db.delete(user)
-            
         db.commit()
     except Exception as e:
         db.rollback()
